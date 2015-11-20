@@ -401,6 +401,18 @@ Example:
 			},
 		},
 		{
+			Name:        "delete",
+			ShortName:   "rm",
+			Aliases:     []string{"del"},
+			Usage:       "Delete undeclared packages",
+			Description: ``,
+			Flags:       []cli.Flag{},
+			Action: func(c *cli.Context) {
+				cxt.Put("deleteOptIn", true)
+				setupHandler(c, "delete", cxt, router)
+			},
+		},
+		{
 			Name:  "tree",
 			Usage: "Tree prints the dependencies of this project as a tree.",
 			Description: `This scans a project's source files and builds a tree
@@ -516,6 +528,15 @@ func routes(reg *cookoo.Registry, cxt cookoo.Context) {
 		Does(cmd.ExecCmd, "cmd").
 		Using("args").From("cxt:cliArgs").
 		Using("filename").From("cxt:yaml")
+
+	reg.Route("delete", "Delete undeclared packages.").
+		Includes("@startup").
+		Includes("@ready").
+		Does(cmd.CowardMode, "_").
+		Does(cmd.Mkdir, "dir").Using("dir").WithDefault(VendorDir).
+		Does(cmd.DeleteUnusedPackages, "deleted").
+		Using("conf").From("cxt:cfg").
+		Using("optIn").From("cxt:deleteOptIn")
 
 	reg.Route("update", "Update dependencies.").
 		Includes("@startup").
